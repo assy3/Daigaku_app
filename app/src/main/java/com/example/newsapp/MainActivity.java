@@ -1,6 +1,7 @@
 package com.example.newsapp;
 
 import android.content.Intent;
+import android.speech.RecognizerIntent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -15,13 +16,17 @@ import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
+    public static int SAMPLE_APP = 1;  //呼び出し元のインテントのID
     TextView tv;
     ListView lv1, lv2;
     Spinner sp;
     WebView wv;
-    //Button sendButton;
+    Button sendButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,8 +37,9 @@ public class MainActivity extends AppCompatActivity {
         tl.setOrientation(LinearLayout.VERTICAL);
         setContentView(tl);
 
-        //sendButton = new Button(this);
-        //sendButton.setText("検索");
+        sendButton = new Button(this);
+        sendButton.setText("音声で検索する");
+        sendButton.setOnClickListener(new SampleClickListener());
 
         wv = new WebView(this);  //Webサイト出力のためのビューの生成
         wv.setWebViewClient(new WebViewClient());  //Webビュークライアントの設定
@@ -68,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
 
         ScrollView sv = new ScrollView(this);
 
+        tl.addView(sendButton);
         tl.addView(tv);
         tl.addView(lv1);  //リニアレイアウトにリストビューを設定
         tl.addView(wv);
@@ -82,6 +89,31 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(getApplication(), SubActivity.class);
             intent.putExtra("KEYWORD",  (String)tmp.getText());
             startActivity(intent);
+        }
+    }
+
+    public void onActivityResult(int reqcode, int result, Intent it){
+        if(reqcode == SAMPLE_APP && result == RESULT_OK){ //インテント先から結果が返ってきたときの処理
+            ArrayList<String> list = it.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);  //インテント先からのデータ取得
+            String tmp = list.get(0);
+            Intent intent = new Intent(getApplication(), SubActivity.class);
+            intent.putExtra("KEYWORD", tmp);
+            startActivity(intent);
+        }
+    }
+
+    class SampleClickListener implements View.OnClickListener {
+        public void onClick(View v){
+            try{
+                Intent it = new Intent();
+                it.setAction(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);  //音声認識にアクションを設定
+                it.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);  //音声認識の設定
+                it.putExtra(RecognizerIntent.EXTRA_PROMPT, "入力してください。");  //音声認識のプロンプト文字の設定
+                startActivityForResult(it, SAMPLE_APP); //結果を取得するインテントのスタート
+            }
+            catch(Exception e){
+                Toast.makeText(getApplicationContext(),"音声認識は利用できません。",Toast.LENGTH_LONG).show();
+            }
         }
     }
 }
