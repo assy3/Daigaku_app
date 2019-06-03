@@ -39,7 +39,7 @@ public class SubActivity extends AppCompatActivity {
         wv.loadUrl(url);  //URLの設定
 
         Button returnButton = new Button(this);
-        returnButton.setText("戻る");
+        returnButton.setText("大学一覧に戻る");
        // setContentView(wv);
         //ll.addView(tv);
         ll.addView(returnButton);
